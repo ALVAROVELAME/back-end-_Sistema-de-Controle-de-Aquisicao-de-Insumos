@@ -1,57 +1,34 @@
 import Fastify from "fastify";
-import cors from "@fastify/cors";
-import swagger from "@fastify/swagger";
-import swaggerUI from "@fastify/swagger-ui";
-import jwt from "@fastify/jwt";
-import dotenv from "dotenv";
+import { connectDB } from "./database/connection";
+import jwt from "./plugins/jwt";
+import swagger from "./plugins/swagger";
 import { authRoutes } from "./routes/authRoutes";
-
-
-app.register(authRoutes);
-
-
-dotenv.config();
+import { itemRoutes } from "./routes/itemRoutes";
+import { env } from "./config/env";
 
 const app = Fastify({ logger: true });
 
-// Plugins
-app.register(cors);
-
-app.register(jwt, {
-  secret: process.env.JWT_SECRET as string,
-});
-
-app.register(swagger, {
-  swagger: {
-    info: {
-      title: "Shopping API",
-      description: "API de controle de aquisições",
-      version: "1.0.0",
-    },
-  },
-});
-
-app.register(swaggerUI, {
-  routePrefix: "/docs",
-});
-
-// Rotas base
-app.get("/health", async () => {
-  return { status: "ok" };
-});
-
-// Server start
-const start = async () => {
+async function start() {
   try {
+    await connectDB();
+
+    app.register(jwt);
+    app.register(swagger);
+
+    // ✅ Prefixos adicionados
+    app.register(authRoutes, { prefix: "/auth" });
+    app.register(itemRoutes, { prefix: "/items" });
+
     await app.listen({ 
-      port: Number(process.env.PORT), 
-      host: "0.0.0.0" 
+      port: env.PORT,
+      host: "0.0.0.0" // importante para Docker depois 👌
     });
+
     console.log("🚀 Server running");
-  } catch (err) {
-    app.log.error(err);
+  } catch (error) {
+    app.log.error(error);
     process.exit(1);
   }
-};
+}
 
 start();

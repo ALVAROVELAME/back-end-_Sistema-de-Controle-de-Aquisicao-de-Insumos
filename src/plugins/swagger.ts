@@ -1,18 +1,19 @@
 import fp from "fastify-plugin";
-import { FastifyInstance } from "fastify";
+import swagger from "@fastify/swagger";
+import swaggerUI from "@fastify/swagger-ui";
 
-export default fp(async (fastify: FastifyInstance) => {
-  await fastify.register(import("@fastify/swagger"), {
+export default fp(async (app) => {
+  app.register(swagger, {
     swagger: {
       info: {
-        title: "API - Sistema de Controle de Insumos",
-        description: "Documentação da API",
+        title: "Shopping API",
+        description: "API de Lista de Compras",
         version: "1.0.0",
       },
     },
   });
 
-  await fastify.register(import("@fastify/swagger-ui"), {
+  app.register(swaggerUI, {
     routePrefix: "/docs",
   });
 });

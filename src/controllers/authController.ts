@@ -1,52 +1,48 @@
 import { FastifyRequest, FastifyReply } from "fastify";
-import { User } from "../models/User";
-import { hashPassword, comparePassword } from "../utils/hash";
+import { authService } from "../services/authService";
 
-export const register = async (
-  request: FastifyRequest,
-  reply: FastifyReply
-) => {
-  const { name, email, password } = request.body as any;
+export async function register(request: FastifyRequest, reply: FastifyReply) {
+  try {
+    const { username, email, password } = request.body as {
+      username: string;
+      email: string;
+      password: string;
+    };
 
-  const userExists = await User.findOne({ email });
+    const result = await authService.register(username, email, password);
 
-  if (userExists) {
-    return reply.status(400).send({ error: "Usuário já existe" });
+    return reply.status(201).send(result);
+
+  } catch (error: any) {
+    return reply.status(error.statusCode || 500).send({
+      message: error.message || "Internal Server Error",
+    });
   }
+}
 
-  const hashedPassword = await hashPassword(password);
+export async function login(request: FastifyRequest, reply: FastifyReply) {
+  try {
+    const { email, password } = request.body as {
+      email: string;
+      password: string;
+    };
 
-  const user = await User.create({
-    name,
-    email,
-    password: hashedPassword,
-  });
+    const result = await authService.login(email, password);
 
-  return reply.status(201).send(user);
-};
+    // ✅ IMPORTANTE → await
+    const token = await reply.jwtSign(
+      { id: result.user.id, email: result.user.email },
+      { expiresIn: "1d" }
+    );
 
-export const login = async (
-  request: FastifyRequest,
-  reply: FastifyReply
-) => {
-  const { email, password } = request.body as any;
+    return reply.send({
+      ...result,
+      token,
+    });
 
-  const user = await User.findOne({ email });
-
-  if (!user) {
-    return reply.status(400).send({ error: "Credenciais inválidas" });
+  } catch (error: any) {
+    return reply.status(error.statusCode || 500).send({
+      message: error.message || "Internal Server Error",
+    });
   }
-
-  const validPassword = await comparePassword(password, user.password);
-
-  if (!validPassword) {
-    return reply.status(400).send({ error: "Credenciais inválidas" });
-  }
-
-  const token = await reply.jwtSign(
-    { id: user._id, email: user.email },
-    { expiresIn: "1d" }
-  );
-
-  return reply.send({ token });
-};
+}
