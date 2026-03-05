@@ -5,6 +5,8 @@ import swagger from "./plugins/swagger";
 import { authRoutes } from "./routes/authRoutes";
 import { itemRoutes } from "./routes/itemRoutes";
 import { env } from "./config/env";
+import rateLimit from "@fastify/rate-limit";
+import helmet from "@fastify/helmet";
 
 const app = Fastify({ logger: true });
 
@@ -14,6 +16,11 @@ async function start() {
 
     app.register(jwt);
     app.register(swagger);
+    app.register(helmet);
+    app.register(rateLimit, {
+      max: 100,
+      timeWindow: "1 minute"
+    });
 
     // ✅ Prefixos adicionados
     app.register(authRoutes, { prefix: "/auth" });

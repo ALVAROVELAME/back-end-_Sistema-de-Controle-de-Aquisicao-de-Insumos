@@ -1,48 +1,106 @@
 import { FastifyRequest, FastifyReply } from "fastify";
 import { authService } from "../services/authService";
+import { registerSchema, loginSchema } from "../schemas/authSchemas";
+import { User } from "../models/User";
 
 export async function register(request: FastifyRequest, reply: FastifyReply) {
+
   try {
-    const { username, email, password } = request.body as {
-      username: string;
-      email: string;
-      password: string;
-    };
 
-    const result = await authService.register(username, email, password);
+    const data = registerSchema.parse(request.body);
 
-    return reply.status(201).send(result);
+    const result = await authService.register(
+      data.username,
+      data.email,
+      data.password
+    );
+
+    return reply.send(result);
 
   } catch (error: any) {
-    return reply.status(error.statusCode || 500).send({
-      message: error.message || "Internal Server Error",
+
+    return reply.status(error.statusCode || 400).send({
+      message: error.message
     });
+
   }
 }
 
 export async function login(request: FastifyRequest, reply: FastifyReply) {
+
   try {
-    const { email, password } = request.body as {
-      email: string;
-      password: string;
-    };
 
-    const result = await authService.login(email, password);
+    const data = loginSchema.parse(request.body);
 
-    // ✅ IMPORTANTE → await
-    const token = await reply.jwtSign(
-      { id: result.user.id, email: result.user.email },
-      { expiresIn: "1d" }
+    const result = await authService.login(
+      data.email,
+      data.password
     );
 
-    return reply.send({
-      ...result,
-      token,
-    });
+    return reply.send(result);
 
   } catch (error: any) {
-    return reply.status(error.statusCode || 500).send({
-      message: error.message || "Internal Server Error",
+
+    return reply.status(error.statusCode || 400).send({
+      message: error.message
     });
+
+  }
+}
+
+export async function verifyEmail(request: FastifyRequest, reply: FastifyReply) {
+  const { token } = request.params as any;
+
+  const user = await User.findOne({ verificationToken: token });
+
+  if (!user) {
+    // Se frontend não existir, retorna JSON
+    return reply.status(404).send({
+      message: "Token inválido ou usuário não encontrado",
+      success: false
+    });
+  }
+
+  // Marca usuário como verificado
+  user.isVerified = true;
+  user.verificationToken = undefined;
+
+  await user.save();
+
+  // Se frontend existir, redireciona
+  const frontendUrl = process.env.FRONTEND_URL || "";
+
+  if (frontendUrl) {
+    return reply.redirect(`${frontendUrl}/email-confirmed`);
+  }
+
+  // Fallback: envia JSON
+  return reply.send({
+    message: "Email confirmado com sucesso",
+    user: {
+      id: user._id,
+      username: user.username,
+      email: user.email
+    },
+    success: true
+  });
+}
+
+export async function deleteAccount(request: FastifyRequest, reply: FastifyReply) {
+
+  try {
+
+    const userId = (request as any).user.id;
+
+    const result = await authService.deleteAccount(userId);
+
+    return reply.send(result);
+
+  } catch (error: any) {
+
+    return reply.status(error.statusCode || 400).send({
+      message: error.message
+    });
+
   }
 }
