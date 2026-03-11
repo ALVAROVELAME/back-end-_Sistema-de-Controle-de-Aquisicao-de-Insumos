@@ -90,7 +90,7 @@ export async function deleteAccount(request: FastifyRequest, reply: FastifyReply
 
   try {
 
-    const userId = (request as any).user.id;
+    const userId = (request as any).user.userId;
 
     const result = await authService.deleteAccount(userId);
 

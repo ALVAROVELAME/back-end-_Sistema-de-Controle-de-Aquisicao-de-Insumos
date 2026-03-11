@@ -3,7 +3,12 @@ import jwt from "@fastify/jwt";
 import { env } from "../config/env";
 
 export default fp(async (app) => {
+
   app.register(jwt, {
     secret: env.JWT_SECRET,
+    sign: {
+      expiresIn: "1d"
+    }
   });
+
 });
