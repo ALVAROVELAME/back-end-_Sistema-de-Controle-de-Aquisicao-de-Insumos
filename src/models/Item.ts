@@ -1,14 +1,33 @@
 import mongoose from "mongoose";
 
-const itemSchema = new mongoose.Schema(
-  {
-    name: String,
-    quantity: Number,
-    price: Number,
-    bought: Boolean,
-    userId: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
-  },
-  { timestamps: true }
-);
+const ItemSchema = new mongoose.Schema({
 
-export const Item = mongoose.model("Item", itemSchema);
+  userId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+    required: true
+  },
+
+  name: {
+    value: String,
+    checked: Boolean
+  },
+
+  quantity: {
+    value: Number,
+    checked: Boolean
+  },
+
+  price: {
+    value: Number,
+    checked: Boolean
+  },
+
+  purchased: {
+    type: Boolean,
+    default: false
+  }
+
+}, { timestamps: true });
+
+export const Item = mongoose.model("Item", ItemSchema);

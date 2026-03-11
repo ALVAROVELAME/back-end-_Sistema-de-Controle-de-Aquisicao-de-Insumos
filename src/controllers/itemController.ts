@@ -1,37 +1,74 @@
-import { FastifyReply, FastifyRequest } from "fastify";
-import * as service from "../services/itemService";
+import { FastifyRequest, FastifyReply } from "fastify";
+import { createItemSchema } from "../schemas/itemSchemas";
+import { createItem, getItemsByUser, updateItem, deleteItem } from "../services/itemService";
 
-export async function create(request: FastifyRequest, reply: FastifyReply) {
-  const user = request.user as any;
+export async function createItemController(
+  request: FastifyRequest,
+  reply: FastifyReply
+) {
 
-  const item = await service.createItem({
-    ...(request.body as any),
-    userId: user.id,
+  const body = createItemSchema.parse(request.body);
+
+  const userId = (request.user as any).userId;
+
+  const item = await createItem({
+    ...body,
+    userId
   });
 
-  reply.send(item);
+  return reply.status(201).send(item);
 }
 
-export async function list(request: FastifyRequest, reply: FastifyReply) {
-  const user = request.user as any;
+export async function getItemsController(
+  request: FastifyRequest,
+  reply: FastifyReply
+) {
 
-  const items = await service.listItems(user.id);
+  const userId = (request.user as any).userId;
 
-  reply.send(items);
+  const items = await getItemsByUser(userId);
+
+  return reply.send(items);
+
 }
 
-export async function toggle(request: FastifyRequest, reply: FastifyReply) {
+export async function updateItemController(
+  request: FastifyRequest,
+  reply: FastifyReply
+) {
+
+  console.log("✏️ Controller updateItem");
+
   const { id } = request.params as any;
 
-  const item = await service.toggleItem(id);
+  console.log("📌 ID recebido:", id);
 
-  reply.send(item);
+  const data = request.body;
+
+  console.log("📌 Body recebido:", data);
+
+  const item = await updateItem(id, data);
+
+  return reply.send(item);
+
 }
 
-export async function remove(request: FastifyRequest, reply: FastifyReply) {
+export async function deleteItemController(
+  request: FastifyRequest,
+  reply: FastifyReply
+) {
+
+  console.log("🗑️ Controller deleteItem");
+
   const { id } = request.params as any;
 
-  await service.deleteItem(id);
+  console.log("📌 ID recebido:", id);
 
-  reply.code(204).send();
+  const item = await deleteItem(id);
+
+  return reply.send({
+    message: "Item deletado com sucesso",
+    item
+  });
+
 }
