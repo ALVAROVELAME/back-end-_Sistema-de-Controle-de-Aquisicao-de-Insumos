@@ -22,7 +22,7 @@ export async function buildApp(dbUri?: string) {
     if (error instanceof ZodError) {
       return reply.status(400).send({
         error: "Dados inválidos",
-        details: error.errors
+        details: error.issues
       });
     }
 
