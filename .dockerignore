@@ -1,6 +1,17 @@
-node_modules
-dist
-.git
+# dependencies
+node_modules/
+
+# build (gerado dentro do container)
+dist/
+
+# git
+.git/
+
+# environment
 .env
-tests
+
+# tests
+tests/
+
+# logs
 npm-debug.log

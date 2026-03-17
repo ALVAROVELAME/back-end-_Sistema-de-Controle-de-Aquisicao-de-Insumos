@@ -1,5 +1,14 @@
-node_modules
+# dependencies
+node_modules/
+
+# environment
 .env
-dist
+
+# build
 dist/
-coverage
+
+# tests
+coverage/
+
+# logs
+npm-debug.log
