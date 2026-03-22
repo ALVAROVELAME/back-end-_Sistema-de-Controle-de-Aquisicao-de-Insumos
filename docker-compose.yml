@@ -1,29 +1,16 @@
 services:
-  backend:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: backend-lista-compras
-    image: backend-lista-compras   # nome seguro da imagem
+  api-insumos:
+    image: backend-insumos-ts:latest
+    container_name: api-insumos-ts
+    restart: always
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+          cpus: '0.50'
+        reservations:
+          memory: 64M
     env_file:
       - .env
     ports:
       - "3333:3333"
-    depends_on:
-      - mongo
-
-  mongo:
-    image: mongo:7
-    container_name: mongo-lista-compras
-    restart: always
-    environment:
-      MONGO_INITDB_ROOT_USERNAME: ${MONGO_INITDB_ROOT_USERNAME}
-      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD}
-      MONGO_INITDB_DATABASE: ${MONGO_INITDB_DATABASE}
-    ports:
-      - "27017:27017"
-    volumes:
-      - mongo_data:/data/db
-
-volumes:
-  mongo_data:
